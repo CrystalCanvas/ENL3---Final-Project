@@ -223,7 +223,7 @@ function endQuiz() {
 
 async function sendResults(payload) {
   try {
-    await fetch("/api/results", {
+    await fetch("api/results", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

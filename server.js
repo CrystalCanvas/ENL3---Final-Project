@@ -5,11 +5,14 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const BASE_PATH = (process.env.BASE_PATH || "").replace(/\/+$/, "");
 const RESULTS_PATH = path.join(__dirname, "data", "results.json");
 const RESULTS_PASSWORD = "Happy";
 
-app.use(cors());
-app.use(express.json());
+const router = express.Router();
+
+router.use(cors());
+router.use(express.json());
 
 async function ensureResultsFile() {
   try {
@@ -20,7 +23,7 @@ async function ensureResultsFile() {
   }
 }
 
-app.post("/api/results", async (req, res) => {
+router.post("/api/results", async (req, res) => {
   const { studentName, studentId, score, totalQuestions, answers } = req.body;
   if (!studentName || !studentId || typeof score !== "number" || typeof totalQuestions !== "number") {
     return res.status(400).json({ error: "Missing required fields" });
@@ -55,9 +58,9 @@ function authorizeResults(req, res) {
   return false;
 }
 
-app.use(express.static(path.join(__dirname, "public")));
+router.use(express.static(path.join(__dirname, "public")));
 
-app.get("/api/results", async (req, res) => {
+router.get("/api/results", async (req, res) => {
   if (!authorizeResults(req, res)) return;
   try {
     await ensureResultsFile();
@@ -95,7 +98,7 @@ const buildResultsTable = (parsed) => {
   `;
 };
 
-app.get("/results/data", async (req, res) => {
+router.get("/results/data", async (req, res) => {
   if (!authorizeResults(req, res)) return;
   try {
     await ensureResultsFile();
@@ -109,7 +112,7 @@ app.get("/results/data", async (req, res) => {
   }
 });
 
-app.get(/^\/results\/?$/i, async (req, res) => {
+router.get(/^\/results\/?$/i, async (req, res) => {
   const provided = req.query.password || req.headers["x-results-password"];
   const authorized = provided === RESULTS_PASSWORD;
 
@@ -176,7 +179,7 @@ app.get(/^\/results\/?$/i, async (req, res) => {
         const status = document.getElementById('status');
         status.textContent = 'Checking...';
         try {
-          const res = await fetch('/results/data', { headers: { 'x-results-password': pwd } });
+          const res = await fetch('results/data', { headers: { 'x-results-password': pwd } });
           if (!res.ok) {
             status.textContent = 'Unauthorized';
             return;
@@ -193,10 +196,13 @@ app.get(/^\/results\/?$/i, async (req, res) => {
   </html>`);
 });
 
-app.use((_, res) => {
+router.use((_, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+app.use(BASE_PATH || "/", router);
+
 app.listen(PORT, () => {
-  console.log(`Paranoia quiz running on http://localhost:${PORT}`);
+  const base = BASE_PATH || "/";
+  console.log(`Paranoia quiz running on http://localhost:${PORT}${base}`);
 });
