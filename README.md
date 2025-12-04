@@ -60,4 +60,4 @@ curl -i -X POST http://localhost:3000/api/results \
 curl -i "http://localhost:3000/api/results?password=Happy"
 ```
 
-Have fun—and maybe keep the lights on.
+Have fun, and maybe keep the lights on.
