@@ -61,6 +61,14 @@ const state = {
 };
 
 const BASE_PATH = (window.__APP_CONFIG__?.basePath || "").replace(/\/+$/, "");
+const configuredEndpoint = window.__APP_CONFIG__?.resultsEndpoint;
+const RESULTS_ENDPOINT = (() => {
+  if (configuredEndpoint && configuredEndpoint.startsWith("/")) {
+    return `${BASE_PATH || ""}${configuredEndpoint}`;
+  }
+  if (configuredEndpoint) return configuredEndpoint;
+  return `${BASE_PATH || ""}/api/results`;
+})();
 
 const elements = {
   startScreen: document.getElementById("start-screen"),
@@ -225,7 +233,7 @@ function endQuiz() {
 
 async function sendResults(payload) {
   try {
-    await fetch(`${BASE_PATH}/api/results`, {
+    await fetch(RESULTS_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
